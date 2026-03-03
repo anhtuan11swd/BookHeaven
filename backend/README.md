@@ -8,9 +8,11 @@ Mật khẩu **không bao giờ** được lưu dạng plain text, luôn đượ
 ## thư viện chính
 
 - `bcryptjs`: băm và so sánh mật khẩu.
-- `express`, `express-rate-limit`: xây dựng REST API và chống brute force.
-- `mongoose`: kết nối MongoDB, định nghĩa model `User`.
+- `express`, `express-rate-limit`: xây dựng REST API và chống brute force/rate limiting.
+- `mongoose`: kết nối MongoDB, định nghĩa model `User` và `Book`.
 - `zod`: validate và chuẩn hoá input từ client.
+- `jsonwebtoken`: tạo và verify JWT token.
+- `mongodb-memory-server`: tạo database tạm cho kiểm thử.
 
 ## model user (rút gọn)
 
@@ -175,20 +177,25 @@ password: {
 ```
 backend/
 ├── controllers/
-│   └── userController.js    # logic xử lý auth và user
+│   ├── userController.js    # logic xử lý auth và user
+│   └── bookController.js    # logic xử lý sách
 ├── middleware/
 │   └── auth.js              # JWT authentication middleware
 ├── models/
-│   └── user.js              # Mongoose User model
+│   ├── user.js              # Mongoose User model
+│   └── book.js              # Mongoose Book model
 ├── routes/
-│   └── user.js              # định nghĩa routes và middleware
+│   ├── user.js              # định nghĩa routes user và middleware
+│   └── book.js              # định nghĩa routes book và middleware
 ├── __tests__/
-│   └── auth.test.js         # kiểm thử API
+│   ├── auth.test.js         # kiểm thử API auth
+│   ├── book.test.js     # kiểm thử API thêm sách
+│   └── book-public-apis.test.js  # kiểm thử API public book
 └── app.js                   # ứng dụng Express chính
 ```
 
-- `routes/user.js` chỉ định nghĩa các endpoint và middleware (rate limiting, auth), sau đó gọi controller tương ứng.
-- `controllers/userController.js` chứa toàn bộ logic nghiệp vụ: validate, query database, băm mật khẩu, tạo JWT, format response.
+- `routes/` chỉ định nghĩa các endpoint và middleware (rate limiting, auth), sau đó gọi controller tương ứng.
+- `controllers/` chứa toàn bộ logic nghiệp vụ: validate, query database, format response.
 
 ## json web token (jwt)
 
@@ -281,12 +288,275 @@ export const getMe = async (req, res) => {
 };
 ```
 
+## endpoint book
+
+### thêm sách mới – `POST /api/v1/books/add-book`
+
+- **Auth & quyền hạn**:
+  - Yêu cầu header `Authorization: Bearer <token>` với token JWT hợp lệ.
+  - Token phải thuộc user có `role: "admin"` (middleware `authenticateToken` + `authorizeRoles("admin")`).
+- **Body (JSON)**:
+
+```json
+{
+  "image_url": "https://example.com/book.jpg",
+  "title": "Tên sách",
+  "author": "Tác giả",
+  "price": 120000,
+  "description": "Mô tả sách",
+  "language": "vi"
+}
+```
+
+- **Response thành công** (`201`):
+
+```json
+{
+  "message": "Tạo sách thành công",
+  "book": {
+    "_id": "6650...",
+    "image_url": "https://example.com/book.jpg",
+    "title": "Tên sách",
+    "author": "Tác giả",
+    "price": 120000,
+    "description": "Mô tả sách",
+    "language": "vi"
+  }
+}
+```
+
+- **Response khi không phải admin** (`403`):
+
+```json
+{
+  "code": 403,
+  "error": "Không có quyền truy cập"
+}
+```
+
+- **Response validate lỗi** (`400`, ví dụ `image_url` sai định dạng hoặc thiếu `title`):
+
+```json
+{
+  "code": 400,
+  "error": "Dữ liệu sách không hợp lệ"
+}
+```
+
+### cập nhật sách – `PUT /api/v1/books/update-book`
+
+- **Auth & quyền hạn**:
+  - Yêu cầu header `Authorization: Bearer <token>` với token JWT hợp lệ.
+  - Token phải thuộc user có `role: "admin"` (middleware `authenticateToken` + `authorizeRoles("admin")`).
+- **Headers bổ sung**:
+
+```http
+bookid: <Mongo ObjectId của sách cần cập nhật>
+```
+
+- **Body (JSON)** – tất cả các trường đều **optional** (chỉ gửi những trường cần đổi):
+
+```json
+{
+  "image_url": "https://example.com/new-book.jpg",
+  "title": "Tên sách mới",
+  "author": "Tác giả mới",
+  "price": 150000,
+  "description": "Mô tả mới",
+  "language": "vi"
+}
+```
+
+- **Response thành công** (`200`):
+
+```json
+{
+  "message": "Cập nhật sách thành công",
+  "book": {
+    "_id": "6650...",
+    "image_url": "https://example.com/new-book.jpg",
+    "title": "Tên sách mới",
+    "author": "Tác giả mới",
+    "price": 150000,
+    "description": "Mô tả mới",
+    "language": "vi"
+  }
+}
+```
+
+- **Response khi `bookid` không hợp lệ** (`400`):
+
+```json
+{
+  "code": 400,
+  "error": "ID sách không hợp lệ"
+}
+```
+
+- **Response khi sách không tồn tại** (`404`):
+
+```json
+{
+  "code": 404,
+  "error": "Không tìm thấy sách"
+}
+```
+
+#### cập nhật sách (param) – `PUT /api/v1/books/:id`
+
+- **Auth & quyền hạn**: Yêu cầu admin (giống `update-book`).
+- **Cách truyền ID**: Truyền trực tiếp trên URL (`/:id`) thay vì trong header.
+- **Body**: Giống `update-book` - tất cả trường optional.
+- **Response**: Giống `update-book`.
+
+#### xóa sách (header) – `DELETE /api/v1/books/delete-book`
+
+- **Auth & quyền hạn**: Yêu cầu admin.
+- **Headers bổ sung**:
+
+```http
+bookid: <Mongo ObjectId của sách cần xóa>
+```
+
+- **Response thành công** (`200`):
+
+```json
+{
+  "message": "Xóa sách thành công"
+}
+```
+
+- **Response khi `bookid` không hợp lệ** (`400`):
+
+```json
+{
+  "code": 400,
+  "error": "ID sách không hợp lệ"
+}
+```
+
+- **Response khi sách không tồn tại** (`404`):
+
+```json
+{
+  "code": 404,
+  "error": "Không tìm thấy sách"
+}
+```
+
+#### xóa sách (param) – `DELETE /api/v1/books/:id`
+
+- **Auth & quyền hạn**: Yêu cầu admin.
+- **Cách truyền ID**: Truyền trực tiếp trên URL (`/:id`).
+- **Response thành công** (`200`):
+
+```json
+{
+  "message": "Xóa sách thành công"
+}
+```
+
+- **Response lỗi**: Tương tự `delete-book` bằng header (400 cho ID invalid, 404 cho không tìm thấy).
+
+### public apis (không cần auth)
+
+Các endpoint dưới đây cho phép bất kỳ ai (người dùng thông thường hoặc khách truy cập) đều có thể truy cập để xem thông tin sách. Tất cả đều có rate limiting (100 requests / 15 phút).
+
+#### lấy tất cả sách – `GET /api/v1/books/get-all-books`
+
+- **Mô tả**: Truy xuất toàn bộ danh sách sách, sắp xếp mới nhất trước.
+- **Response thành công** (`200`):
+
+```json
+{
+  "books": [
+    {
+      "_id": "6650...",
+      "image_url": "https://example.com/newest.jpg",
+      "title": "Sách mới nhất",
+      "author": "Tác giả",
+      "price": 150000,
+      "description": "Mô tả",
+      "language": "vi",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "_id": "664f...",
+      "image_url": "https://example.com/older.jpg",
+      "title": "Sách cũ hơn",
+      "author": "Tác giả",
+      "price": 120000,
+      "description": "Mô tả",
+      "language": "vi",
+      "createdAt": "2023-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### lấy sách mới thêm – `GET /api/v1/books/get-recent-books`
+
+- **Mô tả**: Chỉ lấy 4 cuốn sách gần nhất để hiển thị trên trang chủ.
+- **Response thành công** (`200`):
+
+```json
+{
+  "books": [
+    { "_id": "6650...", "title": "Sách 4", ... },
+    { "_id": "664f...", "title": "Sách 3", ... },
+    { "_id": "664e...", "title": "Sách 2", ... },
+    { "_id": "664d...", "title": "Sách 1", ... }
+  ]
+}
+```
+
+#### lấy chi tiết sách – `GET /api/v1/books/get-book-by-id/:id`
+
+- **Mô tả**: Hiển thị thông tin đầy đủ của một cuốn sách cụ thể.
+- **Parameters**: `id` - MongoDB ObjectId của sách (24 ký tự hex).
+- **Response thành công** (`200`):
+
+```json
+{
+  "book": {
+    "_id": "6650...",
+    "image_url": "https://example.com/book.jpg",
+    "title": "Tên sách",
+    "author": "Tác giả",
+    "price": 120000,
+    "description": "Mô tả sách",
+    "language": "vi",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+- **Response khi id không hợp lệ** (`400`):
+
+```json
+{
+  "code": 400,
+  "error": "ID sách không hợp lệ"
+}
+```
+
+- **Response khi sách không tồn tại** (`404`):
+
+```json
+{
+  "code": 404,
+  "error": "Không tìm thấy sách"
+}
+```
+
 ## kiểm thử
 
 - Sử dụng **Jest** và **Supertest**:
   - `jest.config.cjs` cấu hình `testEnvironment: "node"`.
-  - File test chính: `__tests__/auth.test.js`.
+  - File test: `__tests__/auth.test.js`, `__tests__/book.test.js`, `__tests__/book-public-apis.test.js`.
 - Kiểm thử:
-  - Băm và so sánh mật khẩu với `bcrypt.hash` / `bcrypt.compare`.
-  - Đảm bảo route `/sign-up` và `/login` hoạt động và tuân thủ schema/format trả về.
+  - Auth: Băm và so sánh mật khẩu, đăng ký, đăng nhập, JWT.
+  - Book Admin: Thêm, cập nhật, xóa sách (yêu cầu quyền admin).
+  - Book Public: Lấy tất cả sách, sách mới nhất, chi tiết sách (không cần auth).
 
