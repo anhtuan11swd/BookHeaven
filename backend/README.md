@@ -113,6 +113,119 @@ password: {
 }
 ```
 
+### admin orders – quản trị đơn hàng
+
+#### xem toàn bộ đơn hàng – `GET /api/v1/orders`
+
+- **Auth & quyền hạn**:
+  - Yêu cầu header `Authorization: Bearer <token>` với token JWT hợp lệ.
+  - Token phải thuộc user có `role: "admin"` (middleware `authenticateToken` + kiểm tra `req.user.role` trên server).
+- **Hành vi**:
+  - Truy xuất **toàn bộ** đơn hàng trong hệ thống.
+  - Populate kép:
+    - `user`: chỉ lấy các trường an toàn như `username`, `email`, `address`, `role`.
+    - `book`: lấy thông tin sách tương ứng.
+  - Sắp xếp theo thời gian tạo: `.sort({ createdAt: -1 })` để đơn hàng mới nhất hiển thị trước.
+- **Response thành công** (`200`):
+
+```json
+{
+  "code": 200,
+  "data": [
+    {
+      "_id": "6650...",
+      "book": {
+        "_id": "664f...",
+        "title": "Tên sách",
+        "author": "Tác giả",
+        "price": 120000
+      },
+      "user": {
+        "_id": "664e...",
+        "username": "admin1",
+        "email": "admin@example.com",
+        "address": "Hà Nội",
+        "role": "admin"
+      },
+      "status": "Đã đặt hàng",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+- **Response khi không phải admin** (`403`):
+
+```json
+{
+  "code": 403,
+  "error": "Không có quyền truy cập"
+}
+```
+
+#### cập nhật trạng thái đơn hàng – `PATCH /api/v1/orders/:orderId/status`
+
+- **Auth & quyền hạn**:
+  - Yêu cầu header `Authorization: Bearer <token>` với token JWT hợp lệ.
+  - Chỉ cho phép user có `role: "admin"`.
+- **Parameters**:
+  - `orderId` – MongoDB ObjectId hợp lệ của đơn hàng.
+- **Body (JSON)**:
+
+```json
+{
+  "status": "Đang giao hàng"
+}
+```
+
+- **Các trạng thái hợp lệ**:
+  - `"Đã đặt hàng"` – Order Placed (mặc định khi tạo đơn).
+  - `"Đang giao hàng"` – Out for Delivery.
+  - `"Đã giao"` – Delivered.
+  - `"Đã hủy"` – Canceled.
+- **Hành vi**:
+  - Validate `orderId` và `status` bằng `zod`.
+  - Cập nhật trạng thái đơn hàng bằng `Order.findByIdAndUpdate(orderId, { status }, { new: true })`.
+- **Response thành công** (`200`):
+
+```json
+{
+  "code": 200,
+  "data": {
+    "_id": "6650...",
+    "status": "Đang giao hàng"
+  },
+  "message": "Cập nhật trạng thái đơn hàng thành công"
+}
+```
+
+- **Response khi orderId không hợp lệ hoặc status sai giá trị** (`400`):
+
+```json
+{
+  "code": 400,
+  "error": "ID đơn hàng không hợp lệ"
+}
+```
+
+_hoặc_
+
+```json
+{
+  "code": 400,
+  "error": "Trạng thái đơn hàng không hợp lệ"
+}
+```
+
+- **Response khi đơn hàng không tồn tại** (`404`):
+
+```json
+{
+  "code": 404,
+  "error": "Không tìm thấy đơn hàng"
+}
+```
+
 ### lấy thông tin người dùng – `GET /api/v1/get-user-information`
 
 - **Yêu cầu**:
