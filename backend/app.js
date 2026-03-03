@@ -1,12 +1,17 @@
 import dotenv from "dotenv";
 import express from "express";
 import { connectDatabase } from "./connection/connection.js";
+import { userRouter } from "./routes/user.js";
 
 dotenv.config();
 
 const app = express();
 
 const PORT = process.env.PORT || 1000;
+
+app.use(express.json());
+
+app.use("/api/v1", userRouter);
 
 app.get("/", (_req, res) => {
   res.send("Xin chào từ backend");
