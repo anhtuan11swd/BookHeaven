@@ -179,7 +179,8 @@ backend/
 ├── controllers/
 │   ├── userController.js       # logic xử lý auth và user
 │   ├── bookController.js       # logic xử lý sách
-│   └── favoriteController.js   # logic xử lý sách yêu thích
+│   ├── favoriteController.js   # logic xử lý sách yêu thích
+│   └── cartController.js       # logic xử lý giỏ hàng
 ├── middleware/
 │   └── auth.js                 # JWT authentication middleware
 ├── models/
@@ -188,12 +189,14 @@ backend/
 ├── routes/
 │   ├── user.js                 # định nghĩa routes user và middleware
 │   ├── book.js                 # định nghĩa routes book và middleware
-│   └── favorite.js             # định nghĩa routes favorites và middleware
+│   ├── favorite.js             # định nghĩa routes favorites và middleware
+│   └── cart.js                 # định nghĩa routes giỏ hàng và middleware
 ├── __tests__/
 │   ├── auth.test.js            # kiểm thử API auth
 │   ├── book.test.js            # kiểm thử API thêm sách
 │   ├── book-public-apis.test.js # kiểm thử API public book
-│   └── favorite.test.js        # kiểm thử API favorites
+│   ├── favorite.test.js        # kiểm thử API favorites
+│   └── cart.test.js            # kiểm thử API giỏ hàng
 └── app.js                      # ứng dụng Express chính
 ```
 
@@ -670,6 +673,110 @@ bookid: 6650...
 }
 ```
 
+## endpoint cart (giỏ hàng)
+
+Tất cả endpoints cart đều yêu cầu xác thực JWT và có rate limiting (50 requests / 15 phút).
+
+### thêm sách vào giỏ hàng – `PUT /api/v1/cart`
+
+- **Auth**: Yêu cầu header `Authorization: Bearer <token>`.
+- **Body**:
+
+```json
+{
+  "bookId": "6650..."
+}
+```
+
+- **Hoặc Headers**:
+
+```http
+bookid: 6650...
+```
+
+- **Response thành công** (`200`):
+
+```json
+{
+  "code": 200,
+  "message": "Đã thêm sách vào giỏ hàng"
+}
+```
+
+- **Response khi sách đã tồn tại** (`200`):
+
+```json
+{
+  "code": 200,
+  "message": "Sách đã có trong giỏ hàng"
+}
+```
+
+- **Response khi bookId không hợp lệ** (`400`):
+
+```json
+{
+  "code": 400,
+  "error": "ID sách không hợp lệ"
+}
+```
+
+### xóa sách khỏi giỏ hàng – `PUT /api/v1/cart/remove/:bookId`
+
+- **Auth**: Yêu cầu header `Authorization: Bearer <token>`.
+- **Parameters**: `bookId` - MongoDB ObjectId của sách (24 ký tự hex), truyền trực tiếp trên URL.
+- **Response thành công** (`200`):
+
+```json
+{
+  "code": 200,
+  "message": "Đã xóa sách khỏi giỏ hàng"
+}
+```
+
+- **Response khi sách không có trong giỏ hàng** (`404`):
+
+```json
+{
+  "code": 404,
+  "error": "Sách không có trong giỏ hàng"
+}
+```
+
+### lấy danh sách giỏ hàng – `GET /api/v1/cart`
+
+- **Auth**: Yêu cầu header `Authorization: Bearer <token>`.
+- **Mô tả**: Trả về danh sách sách trong giỏ hàng đã populate đầy đủ thông tin (tiêu đề, tác giả, giá...), sắp xếp với sách mới thêm nằm ở đầu danh sách.
+- **Response thành công** (`200`):
+
+```json
+{
+  "code": 200,
+  "data": [
+    {
+      "_id": "6650...",
+      "image_url": "https://example.com/book.jpg",
+      "title": "Tên sách",
+      "author": "Tác giả",
+      "price": 120000,
+      "description": "Mô tả sách",
+      "language": "vi",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "status": "Thành công"
+}
+```
+
+- **Response khi không có token** (`401`):
+
+```json
+{
+  "code": 401,
+  "error": "Yêu cầu xác thực"
+}
+```
+
 ## kiểm thử
 
 - Sử dụng **Jest** và **Supertest**:
@@ -680,4 +787,5 @@ bookid: 6650...
   - Book Admin: Thêm, cập nhật, xóa sách (yêu cầu quyền admin).
   - Book Public: Lấy tất cả sách, sách mới nhất, chi tiết sách (không cần auth).
   - Favorites: Thêm, xóa, lấy danh sách sách yêu thích (yêu cầu auth, kiểm tra populate và bảo mật).
+  - Cart: Thêm, xóa, lấy danh sách giỏ hàng (yêu cầu auth, kiểm tra populate và đảo thứ tự).
 
