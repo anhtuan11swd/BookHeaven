@@ -1,9 +1,8 @@
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import { FaGripLines, FaXmark } from "react-icons/fa6";
-import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { authActions } from "../store/auth.js";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 const navLinks = [
   { title: "Trang chủ", to: "/" },
@@ -15,20 +14,9 @@ const navLinks = [
 const Navbar = () => {
   const [mobileNav, setMobileNav] = useState("hidden");
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
   // Lấy trạng thái đăng nhập và vai trò từ Redux store
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const role = useSelector((state) => state.auth.role);
-
-  const handleLogout = () => {
-    window.localStorage.removeItem("id");
-    window.localStorage.removeItem("token");
-    window.localStorage.removeItem("role");
-    dispatch(authActions.logout());
-    navigate("/login");
-  };
 
   // Tạo bản sao mảng links để không mutate mảng gốc
   const links = [...navLinks];
@@ -69,15 +57,6 @@ const Navbar = () => {
               {item.title}
             </Link>
           ))}
-          {isLoggedIn && (
-            <button
-              className="ml-2 rounded border border-red-500 px-3 py-1 text-sm font-medium text-red-400 transition-colors duration-300 hover:bg-red-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
-              onClick={handleLogout}
-              type="button"
-            >
-              Đăng xuất
-            </button>
-          )}
         </div>
 
         {!isLoggedIn && (
@@ -154,19 +133,6 @@ const Navbar = () => {
                 Đăng ký
               </Link>
             </div>
-          )}
-
-          {isLoggedIn && (
-            <button
-              className="mt-6 text-3xl border border-red-500 px-6 py-3 rounded text-red-400 hover:bg-red-500 hover:text-white transition-colors duration-300 cursor-pointer"
-              onClick={() => {
-                handleLogout();
-                setMobileNav("hidden");
-              }}
-              type="button"
-            >
-              Đăng xuất
-            </button>
           )}
         </div>
       </div>

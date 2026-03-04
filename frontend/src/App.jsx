@@ -3,11 +3,14 @@ import { useDispatch } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
+import { ProfileLayout } from "./layouts/ProfileLayout";
 import AllBooks from "./pages/AllBooks";
 import Cart from "./pages/Cart";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
+import { Favorites } from "./pages/profile/Favorites";
+import { Settings } from "./pages/profile/Settings";
+import { UserOrderHistory } from "./pages/profile/UserOrderHistory";
 import Signup from "./pages/Signup";
 import ViewBookDetails from "./pages/ViewBookDetails";
 import { authActions } from "./store/auth.js";
@@ -37,7 +40,11 @@ function App() {
           <Route element={<Login />} path="/login" />
           <Route element={<Signup />} path="/signup" />
           <Route element={<Cart />} path="/cart" />
-          <Route element={<Profile />} path="/profile" />
+          <Route element={<ProfileLayout />} path="/profile">
+            <Route element={<Favorites />} index />
+            <Route element={<UserOrderHistory />} path="order-history" />
+            <Route element={<Settings />} path="settings" />
+          </Route>
         </Routes>
       </main>
       <Footer />
