@@ -1,6 +1,7 @@
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import { FaGripLines, FaXmark } from "react-icons/fa6";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 const navLinks = [
@@ -13,6 +14,17 @@ const navLinks = [
 const Navbar = () => {
   const [mobileNav, setMobileNav] = useState("hidden");
 
+  // Lấy trạng thái đăng nhập từ Redux store
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+
+  // Tạo bản sao mảng links để không mutate mảng gốc
+  const links = [...navLinks];
+
+  // Nếu chưa đăng nhập, loại bỏ 2 phần tử từ index 2 (Giỏ hàng và Trang cá nhân)
+  if (!isLoggedIn) {
+    links.splice(2, 2);
+  }
+
   return (
     <header className="bg-zinc-800 text-white">
       <nav className="flex justify-between items-center mx-auto px-2 md:px-4 py-4 max-w-7xl">
@@ -24,7 +36,7 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-4">
-          {navLinks.map((item) => (
+          {links.map((item) => (
             <Link
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 font-medium hover:text-blue-500 text-sm transition-all duration-300 cursor-pointer"
               key={item.to}
@@ -75,7 +87,7 @@ const Navbar = () => {
           <FaXmark />
         </button>
         <div className="flex flex-col items-center">
-          {navLinks.map((item) => (
+          {links.map((item) => (
             <Link
               className="text-white text-4xl font-semibold mb-8 hover:text-blue-400 transition-colors duration-300"
               key={item.to}
