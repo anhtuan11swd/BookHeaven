@@ -3,8 +3,8 @@ import heroImg from "../../assets/hero.png";
 
 export const Hero = () => {
   return (
-    <section className="bg-zinc-900 text-white">
-      <div className="mx-auto flex min-h-[75vh] max-w-7xl flex-col items-center justify-center gap-8 px-2 py-8 md:px-4 lg:flex-row lg:items-center lg:justify-between">
+    <section className="bg-zinc-900 text-white mb-12 md:mb-0">
+      <div className="mx-auto flex min-h-[75vh] max-w-7xl flex-col items-center justify-center gap-8 px-2 py-8 md:flex-row md:items-center md:justify-between md:px-4">
         <div className="flex w-full flex-col items-center text-center lg:w-3/6 lg:items-start lg:text-left">
           <h1 className="text-4xl font-semibold leading-tight text-yellow-100 lg:text-6xl">
             Khám phá thế giới sách tại BookHeaven

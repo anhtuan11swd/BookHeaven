@@ -1,4 +1,6 @@
 import { BookOpen } from "lucide-react";
+import { useState } from "react";
+import { FaGripLines, FaXmark } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 
 const navLinks = [
@@ -9,6 +11,8 @@ const navLinks = [
 ];
 
 const Navbar = () => {
+  const [mobileNav, setMobileNav] = useState("hidden");
+
   return (
     <header className="bg-zinc-800 text-white">
       <nav className="flex justify-between items-center mx-auto px-2 md:px-4 py-4 max-w-7xl">
@@ -31,7 +35,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <Link
             className="bg-transparent hover:bg-white px-4 py-2 border border-blue-500 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 text-blue-500 hover:text-zinc-800 transition-colors duration-300 cursor-pointer"
             to="/login"
@@ -45,7 +49,61 @@ const Navbar = () => {
             Đăng ký
           </Link>
         </div>
+
+        <button
+          aria-expanded={mobileNav === "block"}
+          aria-label="Mở menu điều hướng"
+          className="flex md:hidden items-center p-3 text-white text-2xl hover:text-zinc-400 transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+          onClick={() =>
+            setMobileNav((prev) => (prev === "hidden" ? "block" : "hidden"))
+          }
+          type="button"
+        >
+          <FaGripLines />
+        </button>
       </nav>
+
+      <div
+        className={`${mobileNav} md:hidden bg-zinc-800 h-screen w-full fixed top-0 left-0 z-50 flex flex-col items-center justify-center`}
+      >
+        <button
+          aria-label="Đóng menu điều hướng"
+          className="absolute top-4 right-4 p-3 text-white text-2xl hover:text-zinc-400 transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+          onClick={() => setMobileNav("hidden")}
+          type="button"
+        >
+          <FaXmark />
+        </button>
+        <div className="flex flex-col items-center">
+          {navLinks.map((item) => (
+            <Link
+              className="text-white text-4xl font-semibold mb-8 hover:text-blue-400 transition-colors duration-300"
+              key={item.to}
+              onClick={() => setMobileNav("hidden")}
+              to={item.to}
+            >
+              {item.title}
+            </Link>
+          ))}
+
+          <div className="mt-4 flex flex-col items-center gap-4">
+            <Link
+              className="text-3xl bg-transparent hover:bg-white px-6 py-3 border border-blue-500 rounded text-blue-500 hover:text-zinc-800 transition-colors duration-300 cursor-pointer"
+              onClick={() => setMobileNav("hidden")}
+              to="/login"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              className="text-3xl bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded text-white transition-colors duration-300 cursor-pointer"
+              onClick={() => setMobileNav("hidden")}
+              to="/signup"
+            >
+              Đăng ký
+            </Link>
+          </div>
+        </div>
+      </div>
     </header>
   );
 };
