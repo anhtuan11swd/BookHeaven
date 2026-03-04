@@ -53,7 +53,7 @@ const Navbar = () => {
         <button
           aria-expanded={mobileNav === "block"}
           aria-label="Mở menu điều hướng"
-          className="flex md:hidden items-center p-3 text-white text-2xl hover:text-zinc-400 transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+          className="block md:hidden items-center p-3 text-white text-2xl hover:text-zinc-400 transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
           onClick={() =>
             setMobileNav((prev) => (prev === "hidden" ? "block" : "hidden"))
           }
