@@ -1,11 +1,18 @@
+import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { authActions } from "../store/auth.js";
 
 const Login = () => {
   const [formData, setFormData] = useState({
+    email: "",
     password: "",
-    username: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isPending, setIsPending] = useState(false);
 
   const handleChange = (event) => {
@@ -18,9 +25,46 @@ const Login = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const { email, password } = formData;
+
+    if (!email || !password) {
+      window.alert("Vui lòng nhập đầy đủ email và mật khẩu");
+      return;
+    }
+
     setIsPending(true);
     try {
-      // TODO: Gửi dữ liệu form lên API login ở bước tiếp theo
+      const response = await axios.post(
+        "http://localhost:1000/api/v1/login",
+        formData,
+      );
+
+      const data = response?.data || {};
+      const { token, user } = data;
+      const { id, role } = user || {};
+
+      if (!id || !token) {
+        window.alert(
+          "Đăng nhập không thành công. Thiếu thông tin phiên làm việc.",
+        );
+        return;
+      }
+
+      window.localStorage.setItem("id", id);
+      window.localStorage.setItem("token", token);
+      if (role) {
+        window.localStorage.setItem("role", role);
+      }
+
+      dispatch(authActions.login());
+      dispatch(authActions.changeRole(role || "user"));
+
+      navigate("/profile");
+    } catch (error) {
+      const message =
+        error?.response?.data?.error ||
+        "Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.";
+      window.alert(message);
     } finally {
       setIsPending(false);
     }
@@ -40,18 +84,18 @@ const Login = () => {
           <div className="mt-4 flex flex-col gap-1">
             <label
               className="text-sm font-medium text-zinc-300"
-              htmlFor="username"
+              htmlFor="email"
             >
-              Username
+              Email
             </label>
             <input
               className="mt-1 min-h-[44px] w-full rounded-md bg-zinc-900 px-3 py-2.5 text-base text-zinc-100 outline-none ring-1 ring-zinc-600 transition-shadow duration-200 focus-visible:ring-2 focus-visible:ring-yellow-400"
-              id="username"
-              name="username"
+              id="email"
+              name="email"
               onChange={handleChange}
-              placeholder="Nhập username"
-              type="text"
-              value={formData.username}
+              placeholder="Nhập email"
+              type="email"
+              value={formData.email}
             />
           </div>
 
@@ -62,15 +106,29 @@ const Login = () => {
             >
               Password
             </label>
-            <input
-              className="mt-1 min-h-[44px] w-full rounded-md bg-zinc-900 px-3 py-2.5 text-base text-zinc-100 outline-none ring-1 ring-zinc-600 transition-shadow duration-200 focus-visible:ring-2 focus-visible:ring-yellow-400"
-              id="password"
-              name="password"
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu"
-              type="password"
-              value={formData.password}
-            />
+            <div className="relative mt-1">
+              <input
+                className="min-h-[44px] w-full rounded-md bg-zinc-900 px-3 py-2.5 pr-12 text-base text-zinc-100 outline-none ring-1 ring-zinc-600 transition-shadow duration-200 focus-visible:ring-2 focus-visible:ring-yellow-400"
+                id="password"
+                name="password"
+                onChange={handleChange}
+                placeholder="Nhập mật khẩu"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+              />
+              <button
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                className="absolute right-0 top-0 flex h-full w-12 cursor-pointer items-center justify-center rounded-r-md text-zinc-400 transition-colors duration-200 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+                onClick={() => setShowPassword(!showPassword)}
+                type="button"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button

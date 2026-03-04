@@ -1,8 +1,9 @@
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import { FaGripLines, FaXmark } from "react-icons/fa6";
-import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { authActions } from "../store/auth.js";
 
 const navLinks = [
   { title: "Trang chủ", to: "/" },
@@ -14,8 +15,20 @@ const navLinks = [
 const Navbar = () => {
   const [mobileNav, setMobileNav] = useState("hidden");
 
-  // Lấy trạng thái đăng nhập từ Redux store
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // Lấy trạng thái đăng nhập và vai trò từ Redux store
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const role = useSelector((state) => state.auth.role);
+
+  const handleLogout = () => {
+    window.localStorage.removeItem("id");
+    window.localStorage.removeItem("token");
+    window.localStorage.removeItem("role");
+    dispatch(authActions.logout());
+    navigate("/login");
+  };
 
   // Tạo bản sao mảng links để không mutate mảng gốc
   const links = [...navLinks];
@@ -32,35 +45,57 @@ const Navbar = () => {
           <div className="flex justify-center items-center bg-blue-500 rounded-full w-10 h-10">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <h1 className="font-semibold text-2xl">Book Heaven</h1>
+          <div className="flex flex-col">
+            <h1 className="font-semibold text-2xl">Book Heaven</h1>
+            {role === "admin" && (
+              <span className="mt-0.5 inline-flex items-center justify-center rounded border border-yellow-400 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-yellow-300">
+                Admin
+              </span>
+            )}
+          </div>
         </Link>
 
         <div className="hidden md:flex items-center gap-4">
           {links.map((item) => (
             <Link
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 font-medium hover:text-blue-500 text-sm transition-all duration-300 cursor-pointer"
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 font-medium text-sm transition-all duration-300 cursor-pointer ${
+                item.to === "/profile" && isLoggedIn
+                  ? "border border-blue-500 px-3 py-1 rounded flex items-center justify-center text-blue-400"
+                  : "hover:text-blue-500"
+              }`}
               key={item.to}
               to={item.to}
             >
               {item.title}
             </Link>
           ))}
+          {isLoggedIn && (
+            <button
+              className="ml-2 rounded border border-red-500 px-3 py-1 text-sm font-medium text-red-400 transition-colors duration-300 hover:bg-red-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+              onClick={handleLogout}
+              type="button"
+            >
+              Đăng xuất
+            </button>
+          )}
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
-          <Link
-            className="bg-transparent hover:bg-white px-4 py-2 border border-blue-500 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 text-blue-500 hover:text-zinc-800 transition-colors duration-300 cursor-pointer"
-            to="/login"
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 text-white transition-colors duration-300 cursor-pointer"
-            to="/signup"
-          >
-            Đăng ký
-          </Link>
-        </div>
+        {!isLoggedIn && (
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              className="bg-transparent hover:bg-white px-4 py-2 border border-blue-500 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 text-blue-500 hover:text-zinc-800 transition-colors duration-300 cursor-pointer"
+              to="/login"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 text-white transition-colors duration-300 cursor-pointer"
+              to="/signup"
+            >
+              Đăng ký
+            </Link>
+          </div>
+        )}
 
         <button
           aria-expanded={mobileNav === "block"}
@@ -89,7 +124,11 @@ const Navbar = () => {
         <div className="flex flex-col items-center">
           {links.map((item) => (
             <Link
-              className="text-white text-4xl font-semibold mb-8 hover:text-blue-400 transition-colors duration-300"
+              className={`text-4xl font-semibold mb-8 transition-colors duration-300 ${
+                item.to === "/profile" && isLoggedIn
+                  ? "text-blue-300 border border-blue-500 rounded px-4 py-2 flex items-center justify-center"
+                  : "text-white hover:text-blue-400"
+              }`}
               key={item.to}
               onClick={() => setMobileNav("hidden")}
               to={item.to}
@@ -98,22 +137,37 @@ const Navbar = () => {
             </Link>
           ))}
 
-          <div className="mt-4 flex flex-col items-center gap-4">
-            <Link
-              className="text-3xl bg-transparent hover:bg-white px-6 py-3 border border-blue-500 rounded text-blue-500 hover:text-zinc-800 transition-colors duration-300 cursor-pointer"
-              onClick={() => setMobileNav("hidden")}
-              to="/login"
+          {!isLoggedIn && (
+            <div className="mt-4 flex flex-col items-center gap-4">
+              <Link
+                className="text-3xl bg-transparent hover:bg-white px-6 py-3 border border-blue-500 rounded text-blue-500 hover:text-zinc-800 transition-colors duration-300 cursor-pointer"
+                onClick={() => setMobileNav("hidden")}
+                to="/login"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                className="text-3xl bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded text-white transition-colors duration-300 cursor-pointer"
+                onClick={() => setMobileNav("hidden")}
+                to="/signup"
+              >
+                Đăng ký
+              </Link>
+            </div>
+          )}
+
+          {isLoggedIn && (
+            <button
+              className="mt-6 text-3xl border border-red-500 px-6 py-3 rounded text-red-400 hover:bg-red-500 hover:text-white transition-colors duration-300 cursor-pointer"
+              onClick={() => {
+                handleLogout();
+                setMobileNav("hidden");
+              }}
+              type="button"
             >
-              Đăng nhập
-            </Link>
-            <Link
-              className="text-3xl bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded text-white transition-colors duration-300 cursor-pointer"
-              onClick={() => setMobileNav("hidden")}
-              to="/signup"
-            >
-              Đăng ký
-            </Link>
-          </div>
+              Đăng xuất
+            </button>
+          )}
         </div>
       </div>
     </header>

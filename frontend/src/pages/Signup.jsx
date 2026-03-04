@@ -1,13 +1,18 @@
+import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Signup = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     address: "",
     email: "",
     password: "",
     username: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
   const handleChange = (event) => {
@@ -20,9 +25,29 @@ const Signup = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const { username, email, password, address } = formData;
+
+    if (!username || !email || !password || !address) {
+      window.alert("All fields are required");
+      return;
+    }
+
     setIsPending(true);
     try {
-      // TODO: Gửi dữ liệu form lên API signup ở bước tiếp theo
+      const response = await axios.post(
+        "http://localhost:1000/api/v1/sign-up",
+        formData,
+      );
+
+      const message =
+        response?.data?.message || "Sign up successfully. Please log in.";
+      window.alert(message);
+      navigate("/login");
+    } catch (error) {
+      const message =
+        error?.response?.data?.error ||
+        "Đăng ký không thành công. Vui lòng thử lại.";
+      window.alert(message);
     } finally {
       setIsPending(false);
     }
@@ -82,15 +107,29 @@ const Signup = () => {
             >
               Password
             </label>
-            <input
-              className="mt-1 min-h-[44px] w-full rounded-md bg-zinc-900 px-3 py-2.5 text-base text-zinc-100 outline-none ring-1 ring-zinc-600 transition-shadow duration-200 focus-visible:ring-2 focus-visible:ring-yellow-400"
-              id="password"
-              name="password"
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu"
-              type="password"
-              value={formData.password}
-            />
+            <div className="relative mt-1">
+              <input
+                className="min-h-[44px] w-full rounded-md bg-zinc-900 px-3 py-2.5 pr-12 text-base text-zinc-100 outline-none ring-1 ring-zinc-600 transition-shadow duration-200 focus-visible:ring-2 focus-visible:ring-yellow-400"
+                id="password"
+                name="password"
+                onChange={handleChange}
+                placeholder="Nhập mật khẩu"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+              />
+              <button
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                className="absolute right-0 top-0 flex h-full w-12 cursor-pointer items-center justify-center rounded-r-md text-zinc-400 transition-colors duration-200 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+                onClick={() => setShowPassword(!showPassword)}
+                type="button"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 flex flex-col gap-1">
