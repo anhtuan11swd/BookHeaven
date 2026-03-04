@@ -8,7 +8,7 @@ export const BookCard = ({ data }) => {
   return (
     <Link
       className="flex flex-col rounded overflow-hidden bg-zinc-800 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
-      to={`/book/${_id}`}
+      to={`/view-book-details/${_id}`}
     >
       <img
         alt={title}
