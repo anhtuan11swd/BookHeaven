@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Loader } from "../components/Loader";
+import { MobileNav } from "../components/profile/MobileNav";
 import { Sidebar } from "../components/profile/Sidebar";
 
 export const ProfileLayout = () => {
@@ -66,16 +67,19 @@ export const ProfileLayout = () => {
   }
 
   return (
-    <section className="min-h-screen bg-zinc-900 text-white px-4 py-6 md:px-8">
-      <div className="mx-auto flex flex-col gap-4 md:flex-row md:gap-6">
-        <aside className="w-full md:w-1/6 md:h-screen">
-          <div className="bg-zinc-800 rounded-lg p-4 h-full">
-            <Sidebar data={profile} />
-          </div>
-        </aside>
+    <section className="min-h-screen bg-zinc-900 px-4 py-6 text-white md:px-8">
+      <div className="mx-auto flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="w-full flex flex-col gap-2 lg:w-1/6">
+          <aside className="hidden lg:flex lg:h-screen">
+            <div className="w-full rounded-lg bg-zinc-800 p-4">
+              <Sidebar data={profile} />
+            </div>
+          </aside>
+          <MobileNav />
+        </div>
 
-        <div className="w-full md:w-5/6 mt-4 md:mt-0 lg:mt-8">
-          <div className="bg-zinc-800/40 rounded-lg p-4 md:p-6">
+        <div className="mt-4 w-full lg:mt-8 lg:w-5/6">
+          <div className="rounded-lg bg-zinc-800/40 p-4 md:p-6">
             <Outlet context={{ profile }} />
           </div>
         </div>
