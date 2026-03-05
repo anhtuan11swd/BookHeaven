@@ -10,14 +10,15 @@ export const ProfileLayout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const _isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const navigate = useNavigate();
 
   useEffect(() => {
     const id = window.localStorage.getItem("id");
     const token = window.localStorage.getItem("token");
 
-    if (!isLoggedIn || !id || !token) {
+    // Kiểm tra localStorage trực tiếp thay vì Redux state để tránh redirect khi reload
+    if (!id || !token) {
       navigate("/login");
       return;
     }
@@ -46,7 +47,7 @@ export const ProfileLayout = () => {
     };
 
     fetchUserInfo();
-  }, [isLoggedIn, navigate]);
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -67,14 +68,14 @@ export const ProfileLayout = () => {
   return (
     <section className="min-h-screen bg-zinc-900 text-white px-4 py-6 md:px-8">
       <div className="mx-auto flex flex-col gap-4 md:flex-row md:gap-6">
-        <aside className="w-full md:w-1/6">
+        <aside className="w-full md:w-1/6 md:h-screen">
           <div className="bg-zinc-800 rounded-lg p-4 h-full">
             <Sidebar data={profile} />
           </div>
         </aside>
 
-        <div className="w-full md:w-5/6">
-          <div className="bg-zinc-800/40 rounded-lg p-4 md:p-6 h-full">
+        <div className="w-full md:w-5/6 mt-4 md:mt-0 lg:mt-8">
+          <div className="bg-zinc-800/40 rounded-lg p-4 md:p-6">
             <Outlet context={{ profile }} />
           </div>
         </div>

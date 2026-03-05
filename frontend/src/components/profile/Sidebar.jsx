@@ -78,13 +78,15 @@ export const Sidebar = ({ data }) => {
         </nav>
       </div>
 
-      <button
-        className="mt-6 w-full rounded-md bg-zinc-900 py-2 text-sm font-medium text-zinc-100 cursor-pointer transition-colors duration-200 hover:bg-zinc-800"
-        onClick={handleLogout}
-        type="button"
-      >
-        Đăng xuất
-      </button>
+      <div className="mt-4 md:mt-6">
+        <button
+          className="w-full rounded-md bg-zinc-900 py-2 text-sm font-medium text-zinc-100 cursor-pointer transition-colors duration-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800"
+          onClick={handleLogout}
+          type="button"
+        >
+          Đăng xuất
+        </button>
+      </div>
     </div>
   );
 };

@@ -6,6 +6,8 @@ import { Link, useParams } from "react-router-dom";
 import { Loader } from "../components/Loader.jsx";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
+const API_ADD_FAVORITE = `${BASE_URL}/favorites`;
+const API_ADD_TO_CART = `${BASE_URL}/cart`;
 
 const ViewBookDetails = () => {
   const { id } = useParams();
@@ -14,6 +16,71 @@ const ViewBookDetails = () => {
 
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const role = useSelector((state) => state.auth.role);
+
+  const handleFavorite = async () => {
+    const userId = window.localStorage.getItem("id");
+    const token = window.localStorage.getItem("token");
+
+    if (!userId || !token) {
+      alert("Vui lòng đăng nhập để thêm sách vào danh sách yêu thích.");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        API_ADD_FAVORITE,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            bookid: id,
+            id: userId,
+          },
+        },
+      );
+
+      const message =
+        response?.data?.message || "Đã thêm sách vào danh sách yêu thích";
+      alert(message);
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.error ||
+        "Không thể thêm sách vào danh sách yêu thích. Vui lòng thử lại.";
+      alert(errorMessage);
+    }
+  };
+
+  const handleCart = async () => {
+    const userId = window.localStorage.getItem("id");
+    const token = window.localStorage.getItem("token");
+
+    if (!userId || !token) {
+      alert("Vui lòng đăng nhập để thêm sách vào giỏ hàng.");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        API_ADD_TO_CART,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            bookid: id,
+            id: userId,
+          },
+        },
+      );
+
+      const message = response?.data?.message || "Đã thêm sách vào giỏ hàng";
+      alert(message);
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.error ||
+        "Không thể thêm sách vào giỏ hàng. Vui lòng thử lại.";
+      alert(errorMessage);
+    }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -103,6 +170,7 @@ const ViewBookDetails = () => {
                     <button
                       aria-label="Thêm vào giỏ hàng"
                       className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-md transition-colors duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                      onClick={handleCart}
                       type="button"
                     >
                       <FaShoppingCart className="text-blue-500" />
@@ -111,6 +179,7 @@ const ViewBookDetails = () => {
                     <button
                       aria-label="Thêm vào danh sách yêu thích"
                       className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-md transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                      onClick={handleFavorite}
                       type="button"
                     >
                       <FaHeart className="text-red-500" />
