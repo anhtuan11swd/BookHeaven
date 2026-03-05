@@ -1,5 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { FaEdit, FaHeart, FaShoppingCart, FaTrash } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import { Loader } from "../components/Loader.jsx";
 
@@ -9,6 +11,9 @@ const ViewBookDetails = () => {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const role = useSelector((state) => state.auth.role);
 
   useEffect(() => {
     if (!id) {
@@ -79,44 +84,88 @@ const ViewBookDetails = () => {
       aria-label="Chi tiết sách"
       className="min-h-screen bg-zinc-900 px-4 py-8 md:px-12"
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:gap-8">
-        <div className="flex shrink-0 flex-col md:w-1/2">
-          <div className="aspect-3/4 w-full overflow-hidden rounded-lg bg-zinc-800">
-            <img
-              alt={title}
-              className="h-full w-full object-cover"
-              decoding="async"
-              loading="lazy"
-              src={image_url}
-            />
-          </div>
-          <div className="mt-4 flex gap-3">
-            {/* Chừa không gian cho nút Thêm vào yêu thích / Thêm vào giỏ hàng (Redux) */}
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 rounded-lg bg-zinc-800 p-4 md:w-1/2 md:p-6">
-          <h1 className="text-3xl font-semibold leading-tight text-zinc-100 md:text-4xl">
-            {title}
-          </h1>
-          <p className="text-zinc-400">{author}</p>
-          {description ? (
-            <div className="flex flex-col gap-1">
-              <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-                Mô tả
-              </h2>
-              <p className="text-zinc-300 leading-relaxed">{description}</p>
+      <div className="mx-auto w-full max-w-6xl rounded-2xl bg-zinc-800 p-6 md:p-8 lg:p-12">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <div className="flex shrink-0 flex-col lg:w-5/12">
+            <div className="h-[30vh] w-full overflow-hidden rounded-xl bg-zinc-900/60 sm:h-[40vh] md:h-[50vh] lg:h-[60vh]">
+              <img
+                alt={title}
+                className="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
+                src={image_url}
+              />
             </div>
-          ) : null}
-          <div className="flex flex-wrap gap-4">
-            <div>
-              <span className="text-sm text-zinc-500">Ngôn ngữ: </span>
-              <span className="text-zinc-300">{language}</span>
-            </div>
-            <div>
-              <span className="text-sm text-zinc-500">Giá: </span>
-              <span className="text-xl font-semibold text-zinc-200">
-                {priceFormatted}
-              </span>
+            {isLoggedIn && (
+              <div className="mt-8 flex flex-col items-center gap-4 lg:mt-0 lg:items-start">
+                {role === "user" && (
+                  <>
+                    <button
+                      aria-label="Thêm vào giỏ hàng"
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-md transition-colors duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                      type="button"
+                    >
+                      <FaShoppingCart className="text-blue-500" />
+                      <span>Thêm vào giỏ hàng</span>
+                    </button>
+                    <button
+                      aria-label="Thêm vào danh sách yêu thích"
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-md transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                      type="button"
+                    >
+                      <FaHeart className="text-red-500" />
+                      <span>Yêu thích</span>
+                    </button>
+                  </>
+                )}
+
+                {role === "admin" && (
+                  <>
+                    <button
+                      aria-label="Chỉnh sửa sách"
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-md transition-colors duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                      type="button"
+                    >
+                      <FaEdit className="text-zinc-700" />
+                      <span>Sửa sách</span>
+                    </button>
+                    <button
+                      aria-label="Xóa sách"
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-base font-medium text-red-500 shadow-md transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                      type="button"
+                    >
+                      <FaTrash />
+                      <span>Xóa sách</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="mt-8 flex flex-col gap-4 rounded-xl bg-zinc-900/40 p-4 md:p-6 lg:mt-0 lg:w-7/12">
+            <h1 className="text-3xl font-semibold leading-tight text-zinc-100 md:text-4xl">
+              {title}
+            </h1>
+            <p className="text-zinc-400">{author}</p>
+            {description ? (
+              <div className="flex flex-col gap-1">
+                <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+                  Mô tả
+                </h2>
+                <p className="leading-relaxed text-zinc-300">{description}</p>
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-4">
+              <div>
+                <span className="text-sm text-zinc-500">Ngôn ngữ: </span>
+                <span className="text-zinc-300">{language}</span>
+              </div>
+              <div>
+                <span className="text-sm text-zinc-500">Giá: </span>
+                <span className="text-xl font-semibold text-zinc-200">
+                  {priceFormatted}
+                </span>
+              </div>
             </div>
           </div>
         </div>
