@@ -31,7 +31,9 @@ const AllBooks = () => {
         <h1 className="text-3xl font-semibold text-yellow-100">All Books</h1>
         <div className="mt-4">
           {loading ? (
-            <Loader />
+            <div className="w-full h-screen flex items-center justify-center">
+              <Loader />
+            </div>
           ) : books.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-400">
               Hiện chưa có sách trong hệ thống.
