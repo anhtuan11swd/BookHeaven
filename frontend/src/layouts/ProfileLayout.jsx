@@ -1,10 +1,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Loader } from "../components/Loader";
 import { MobileNav } from "../components/profile/MobileNav";
 import { Sidebar } from "../components/profile/Sidebar";
+import { authActions } from "../store/auth";
 
 export const ProfileLayout = () => {
   const [profile, setProfile] = useState(null);
@@ -13,6 +14,15 @@ export const ProfileLayout = () => {
 
   const _isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    window.localStorage.removeItem("id");
+    window.localStorage.removeItem("token");
+    window.localStorage.removeItem("role");
+    dispatch(authActions.logout());
+    navigate("/login");
+  };
 
   useEffect(() => {
     const id = window.localStorage.getItem("id");
@@ -75,7 +85,42 @@ export const ProfileLayout = () => {
               <Sidebar data={profile} />
             </div>
           </aside>
+          {/* Thông tin profile cho mobile */}
+          <div className="flex items-center gap-3 rounded-lg bg-zinc-800 p-3 lg:hidden">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white text-lg font-semibold">
+              {profile?.avatar ? (
+                <img
+                  alt={profile.username || "Ảnh đại diện"}
+                  className="h-12 w-12 rounded-full object-cover"
+                  src={profile.avatar}
+                />
+              ) : (
+                <span aria-hidden="true">
+                  {profile?.username?.charAt(0).toUpperCase() || "?"}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-zinc-100 truncate">
+                {profile?.username || "Người dùng"}
+              </span>
+              {profile?.email && (
+                <span className="text-xs text-zinc-400 truncate">
+                  {profile.email}
+                </span>
+              )}
+            </div>
+          </div>
+
           <MobileNav />
+
+          <button
+            className="w-full rounded-md bg-zinc-900 py-2 text-sm font-medium text-zinc-100 cursor-pointer transition-colors duration-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800 lg:hidden"
+            onClick={handleLogout}
+            type="button"
+          >
+            Đăng xuất
+          </button>
         </div>
 
         <div className="mt-4 w-full lg:mt-8 lg:w-5/6">
